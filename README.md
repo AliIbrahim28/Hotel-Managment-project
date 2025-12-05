@@ -1,6 +1,3 @@
-//# Hotel-Managment-project
-//its a reality absed hotel managment project which include admin login,cutomer checkin and check out etc.
-
 #include<iostream> //to Include library so we can use cout and cin
 #include<fstream>
 using namespace std;
