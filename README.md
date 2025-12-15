@@ -238,3 +238,141 @@ if(arr[floorNo][roomNo-1].booking==false){
 
 }
 
+//to find details of person using its CNIC
+void  specificDetailsfromCNIC(){
+
+string cnic;
+cout<<"Enter CNIC: ";
+cin>>cnic;
+while(!validCNIC(cnic)){
+    cout<<"Enter valid CNIC format of 13 digits (35103xxxxxx55)";
+    cin>>cnic;
+}
+bool check=true;//if no one is present with this cnic in room
+
+for(int floor=0;floor<3;floor++){
+
+    for(int room=0;room<15;room++){
+        if(arr[floor][room].CNIC==cnic){
+
+            cout<<"Name: "<<arr[floor][room].name<<endl;
+
+            cout<<"ROOM No: "<<arr[floor][room].room_no<<endl;
+
+            cout<<"Flooor No: "<<arr[floor][room].floor_no<<endl;
+
+            cout<<"Staying for "<<arr[floor][room].days<<" days\n";
+
+            cout<<"Total Rent: "<<arr[floor][room].rent<<endl;
+
+            check=false;
+            }
+        
+        }
+    }
+if(check==true){
+        cout<<"No one with this cnic is present in Hotel";
+    }
+}
+
+
+
+void displayCurrentBookings(){
+cout<<endl<<"=====Current Bookings In Hotels Now=====";
+    for(int floor=0;floor<3;floor++){
+
+    for(int room=0;room<15;room++){
+        if(arr[floor][room].booking==false){
+
+            cout<<endl;
+
+            cout<<"Name: "<<arr[floor][room].name<<endl;
+
+            cout<<"ROOM No: "<<arr[floor][room].room_no<<endl;
+
+            cout<<"Flooor No: "<<arr[floor][room].floor_no<<endl;
+
+            cout<<"Staying for "<<arr[floor][room].days<<" days\n";
+
+            cout<<"Total Rent: "<<arr[floor][room].rent<<endl;
+
+            cout<<endl;
+            }
+        
+        }
+    }
+
+
+}
+
+void history(){
+
+// fstream fout;
+// fout.open("CurrentBooking.txt");
+// for(int n=0;n<3;n++){
+
+//     for(int j=0;j<15;j++){
+
+//         if(arr[n][j].booking == false){
+//             cout<<"Room No : "<<j<<" Floor No : "<<n<<endl;
+//             cout<<"Name: "<<arr[n][j].name<<endl;
+//             cout<<"Age: "<<arr[n][j].age<<endl;
+//             cout<<"Days: "<<arr[n][j].days<<endl;
+//             cout<<arr[floorNo][roomNo-1].rent<<endl;
+//         }
+
+//     }
+//  }
+
+
+
+
+
+
+
+
+// fout.close();
+
+
+}
+
+
+int main(){
+
+///intialiizng all bookings with true
+for(int n=0;n<3;n++){
+
+    for(int j=0;j<15;j++){
+        arr[n][j].booking=true;
+    }
+ }
+
+
+int choice;
+
+while(choice!=0){
+
+    
+    cout<<"Enter choice: ";
+    cin>>choice;
+
+switch(choice){
+
+case 1:
+        displayCurrentBookings();
+        break;
+case 2:
+    checkin();
+    break;
+case 3:
+ specificDetailsfromRoom();
+    break;
+ case 4:
+ specificDetailsfromCNIC();
+ break;
+
+ case 5:
+ checkout();
+}
+    }
+        }
