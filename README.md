@@ -28,14 +28,18 @@ void totalRevenueReport();  // New feature
 /*
     ===== STRUCT TO STORE ROOM DETAILS =====
 */
-struct details{
+struct details {
     int age;
-    int room_no, floor_no;
-    int rent, days;
-    string CNIC, name;
+    int room_no;
+    int floor_no;
+    int rent;
+    int days;
+    string CNIC;
+    string name;
     string checkinTime;   // new variable to store check-in time
-    bool booking = true;     // true means room is empty
+    bool booking = true;  // true means room is empty
 };
+
 /*
     ===== HISTORY FUNCTION PROTOTYPES =====
 */
@@ -43,14 +47,16 @@ void storeCheckinHistory(details &d);
 void storeCheckoutHistory(details &d);
 void displayHistory();
 
-
 /*
     ===== GLOBAL VARIABLES =====
 */
-string Tname, Tcnic;
-int Tdays, rent;
-int floorNo, roomNo;
-int totalRevenue = 0;  // New global variable
+string Tname;
+string Tcnic;
+int Tdays;
+int rent;
+int floorNo;
+int roomNo;
+long long totalRevenue = 0;  // Changed to long long to prevent overflow
 
 // Hotel has 3 floors and 15 rooms per floor
 details arr[3][15];
@@ -60,35 +66,38 @@ details arr[3][15];
 */
 
 // First time admin registration
-void adminRegister(){
+void adminRegister() {
+    string user;
+    string pass;
 
-    string user, pass;
+    cout << "First Time Admin Registration\n";
 
-    cout<<"First Time Admin Registration\n";
-
-    // cin.ignore();
-    cout<<"Enter Username : ";
+    cout << "Enter Username : ";
     getline(cin, user);
 
-    cout<<"Enter Password : ";
+    cout << "Enter Password : ";
     getline(cin, pass);
 
-    // Store admin credentials in file
     ofstream out("admin.txt");
-    out<<user<<endl;
-    out<<pass<<endl;
+    if(!out) {
+        cout << "Error creating admin.txt\n";
+        return;
+    }
+
+    out << user << endl;
+    out << pass << endl;
     out.close();
 
-    cout<<"Admin Registered Successfully\n";
+    cout << "Admin Registered Successfully\n";
 }
 
-bool adminLogin(){
-
+// Admin login function
+bool adminLogin() {
     ifstream in("admin.txt");
+    string storedUser;
+    string storedPass;
 
-    string storedUser, storedPass;
-
-    if(!in || !getline(in, storedUser) || !getline(in, storedPass)){
+    if(!in || !getline(in, storedUser) || !getline(in, storedPass)) {
         in.close();
         adminRegister();
         return true;
@@ -96,67 +105,67 @@ bool adminLogin(){
 
     in.close();
 
-    string user, pass;
+    string user;
+    string pass;
 
-    cout<<"Enter Admin Username : ";
+    cout << "Enter Admin Username : ";
     getline(cin, user);
 
-    cout<<"Enter Admin Password : ";
+    cout << "Enter Admin Password : ";
     getline(cin, pass);
 
-    if(user == storedUser && pass == storedPass){
-        cout<<"Login Successful\n";
+    if(user == storedUser && pass == storedPass) {
+        cout << "Login Successful\n";
         return true;
+    } else {
+        cout << "Wrong Username or Password\n";
+        return false;
     }
-
-    cout<<"Wrong Username or Password\n";
-    return false;
 }
 
-
 // Change admin username & password
-void changeAdminPassword(){
-
+void changeAdminPassword() {
     ifstream in("admin.txt");
-
-    if(!in){
-        cout<<"No Admin Found\n";
+    if(!in) {
+        cout << "No Admin Found\n";
         return;
     }
 
-    string storedUser, storedPass;
+    string storedUser;
+    string storedPass;
     getline(in, storedUser);
     getline(in, storedPass);
     in.close();
 
-    string oldUser, oldPass;
-
+    string oldUser;
+    string oldPass;
     cin.ignore();
-    cout<<"Enter Old Username : ";
+    cout << "Enter Old Username : ";
     getline(cin, oldUser);
-
-    cout<<"Enter Old Password : ";
+    cout << "Enter Old Password : ";
     getline(cin, oldPass);
 
-    if(oldUser == storedUser && oldPass == storedPass){
-
-        string newUser, newPass;
-
-        cout<<"Enter New Username : ";
+    if(oldUser == storedUser && oldPass == storedPass) {
+        string newUser;
+        string newPass;
+        cout << "Enter New Username : ";
         getline(cin, newUser);
-
-        cout<<"Enter New Password : ";
+        cout << "Enter New Password : ";
         getline(cin, newPass);
 
         ofstream out("admin.txt", ios::trunc);
-        out<<newUser<<endl;
-        out<<newPass<<endl;
+        if(!out) {
+            cout << "Error opening admin.txt\n";
+            return;
+        }
+
+        out << newUser << endl;
+        out << newPass << endl;
         out.close();
 
-        cout<<"Password Updated Successfully\n";
-    }
-    else{
-        cout<<"Old Credentials Incorrect\n";
+        cout << "Password Updated Successfully\n";
+    } else {
+        cout << "Old Credentials Incorrect\n";
     }
 }
 
@@ -165,14 +174,13 @@ void changeAdminPassword(){
 */
 
 // CNIC validation (13 digits only)
-bool validCNIC(string cnic){
-
-    if(cnic.length() != 13){
+bool validCNIC(string cnic) {
+    if(cnic.length() != 13) {
         return false;
     }
 
-    for(char c : cnic){
-        if(!isdigit(c)){
+    for(char c : cnic) {
+        if(!isdigit(c)) {
             return false;
         }
     }
@@ -180,66 +188,93 @@ bool validCNIC(string cnic){
     return true;
 }
 
-// Room check-in function
+// Room check-in function with improved error handling
 void checkin() {
-
     cin.ignore();
+
     cout << "Enter Your Name : ";
     getline(cin, Tname);
 
     cout << "Enter CNIC : ";
     cin >> Tcnic;
 
-    while(!validCNIC(Tcnic)){
+    while(!validCNIC(Tcnic)) {
         cout << "Enter valid CNIC : ";
         cin >> Tcnic;
     }
 
-    cout << "Enter No of Days You Want To Stay : ";
-    cin >> Tdays;
+    // Check if CNIC already has a booking
+    for(int f = 0; f < 3; f++) {
+        for(int r = 0; r < 15; r++) {
+            if(arr[f][r].CNIC == Tcnic && !arr[f][r].booking) {
+                cout << "This CNIC already has a booking!\n";
+                return;
+            }
+        }
+    }
 
-    // Floor selection menu with per-day rent
+    cout << "Enter No of Days You Want To Stay : ";
+    while(!(cin >> Tdays) || Tdays <= 0) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Enter a valid number of days: ";
+    }
+
     cout << "Select Floor Type:\n";
     cout << "0 - ECONOMIC      (Per day rent: 1000)\n";
     cout << "1 - ECONOMIC++    (Per day rent: 2000)\n";
     cout << "2 - BUSINESS      (Per day rent: 3000)\n";
-    cout << "Enter Floor No : ";
-    cin >> floorNo;
 
-    while(floorNo < 0 || floorNo > 2){
-        cout << "Invalid choice. Enter Floor No (0-2) : ";
-        cin >> floorNo;
+    cout << "Enter Floor No : ";
+    while(!(cin >> floorNo) || floorNo < 0 || floorNo > 2) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Invalid input. Enter Floor No (0-2) : ";
     }
 
     cout << "Enter Room No : ";
-    cin >> roomNo;
+    while(!(cin >> roomNo) || roomNo < 1 || roomNo > 15) {
+        cin.clear();
+        cin.ignore(1000, '\n');
+        cout << "Invalid Room No (1-15). Enter again: ";
+    }
 
     // Check if room is already booked
-    while(arr[floorNo][roomNo-1].booking == false){
+    while(arr[floorNo][roomNo-1].booking == false) {
         cout << "Room Already Booked\n";
 
-        // Show floor menu again with rent
         cout << "Select Floor Type:\n";
         cout << "0 - ECONOMIC      (Per day rent: 1000)\n";
         cout << "1 - ECONOMIC++    (Per day rent: 2000)\n";
         cout << "2 - BUSINESS      (Per day rent: 3000)\n";
+
         cout << "Enter Floor No : ";
-        cin >> floorNo;
+        while(!(cin >> floorNo) || floorNo < 0 || floorNo > 2) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Invalid input. Enter Floor No (0-2) : ";
+        }
 
         cout << "Enter Room No : ";
-        cin >> roomNo;
+        while(!(cin >> roomNo) || roomNo < 1 || roomNo > 15) {
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Invalid Room No (1-15). Enter again: ";
+        }
     }
 
     // Rent calculation
-    if(floorNo == 0) rent = 1000;
-    else if(floorNo == 1) rent = 2000;
-    else rent = 3000;
+    if(floorNo == 0) {
+        rent = 1000;
+    } else if(floorNo == 1) {
+        rent = 2000;
+    } else {
+        rent = 3000;
+    }
 
-    // Get current time
     time_t now = time(0);
     char* dt = ctime(&now);
 
-    // Store details
     arr[floorNo][roomNo-1].name = Tname;
     arr[floorNo][roomNo-1].CNIC = Tcnic;
     arr[floorNo][roomNo-1].room_no = roomNo;
@@ -247,32 +282,27 @@ void checkin() {
     arr[floorNo][roomNo-1].days = Tdays;
     arr[floorNo][roomNo-1].rent = rent * Tdays;
     arr[floorNo][roomNo-1].booking = false;
-    arr[floorNo][roomNo-1].checkinTime = dt;  // store check-in time
+    arr[floorNo][roomNo-1].checkinTime = dt;
 
-    totalRevenue += arr[floorNo][roomNo-1].rent;  // Update global revenue
+    totalRevenue += arr[floorNo][roomNo-1].rent;
 
     cout << "Total Rent : " << rent * Tdays << endl;
     cout << "Checked In Successfully at " << dt;
 
-    // Store check-in history
     storeCheckinHistory(arr[floorNo][roomNo-1]);
 }
 
 // Room checkout
-void checkout(){
-
+void checkout() {
     string cnic;
     bool found = false;
 
-    cout<<"Enter CNIC : ";
-    cin>>cnic;
+    cout << "Enter CNIC : ";
+    cin >> cnic;
 
-    for(int floor = 0; floor < 3; floor++){
-        for(int room = 0; room < 15; room++){
-
-            if(arr[floor][room].CNIC == cnic){
-
-                // Store checkout history before clearing details
+    for(int floor = 0; floor < 3; floor++) {
+        for(int room = 0; room < 15; room++) {
+            if(arr[floor][room].CNIC == cnic) {
                 storeCheckoutHistory(arr[floor][room]);
 
                 arr[floor][room].booking = true;
@@ -282,42 +312,41 @@ void checkout(){
                 arr[floor][room].rent = 0;
                 arr[floor][room].checkinTime = "";
 
-                cout<<"Checked Out Successfully\n";
+                cout << "Checked Out Successfully\n";
                 found = true;
             }
         }
     }
 
-    if(!found){
-        cout<<"No Booking Found\n";
+    if(!found) {
+        cout << "No Booking Found\n";
     }
 }
 
-void showAvailableRooms(){
-
+// Show available rooms
+void showAvailableRooms() {
     bool anyAvailable = false;
 
     cout << "\n===== AVAILABLE ROOMS =====\n";
 
-    for(int floor = 0; floor < 3; floor++){
-
-        if(floor == 0)
+    for(int floor = 0; floor < 3; floor++) {
+        if(floor == 0) {
             cout << "\nFloor 0 (ECONOMIC):\n";
-        else if(floor == 1)
+        } else if(floor == 1) {
             cout << "\nFloor 1 (ECONOMIC++):\n";
-        else
+        } else {
             cout << "\nFloor 2 (BUSINESS):\n";
+        }
 
-        for(int room = 0; room < 15; room++){
-
-            if(arr[floor][room].booking == true){
+        for(int room = 0; room < 15; room++) {
+            if(arr[floor][room].booking) {
                 cout << "Room No: " << room + 1 << " is Available\n";
                 anyAvailable = true;
             }
         }
     }
 
-    if(!anyAvailable){
+    if(!anyAvailable) {
         cout << "\nNo rooms available right now.\n";
     }
 }
